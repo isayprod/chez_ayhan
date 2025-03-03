@@ -29,7 +29,7 @@ export function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-6">
           <a href="#story" className="text-orange-600 hover:text-orange-700 px-4 py-2 rounded">
-            Notre Histoire
+            Notre Histoire 
           </a>
           <a href="#menu" className="text-orange-600 hover:text-orange-700 px-4 py-2 rounded">
             Menu
