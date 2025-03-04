@@ -3,7 +3,7 @@ name: Deploy to Droplet
 on:
   push:
     branches:
-      - droplet_prod  # Trigger on push to main
+      - main # Trigger on push to main
 
 jobs:
   deploy:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8  # Latest stable as of now
+          version: 8 # Latest stable as of now
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -24,9 +24,11 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t chez-ayhan .
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DROPLET_HOST_KEY }}" >> ~/.ssh/known_hosts  # Add host key
           echo "${{ secrets.DROPLET_SSH_KEY }}" > deploy_key
           chmod 600 deploy_key
+          docker build -t chez-ayhan .
           docker save chez-ayhan | ssh -i deploy_key root@207.154.244.48 "docker load"
 
       - name: Deploy on Droplet
