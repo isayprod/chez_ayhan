@@ -2,6 +2,7 @@
 
 # cursor rules
 .cursor/rules/*
+.cursor/rules/up-to-date-doc.md
 
 # dependencies
 /node_modules
