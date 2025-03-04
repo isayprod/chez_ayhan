@@ -36,7 +36,9 @@ jobs:
           ssh -i deploy_key root@207.154.244.48 << 'EOF'
             docker stop chez-ayhan || true
             docker rm chez-ayhan || true
-            docker run -d --name chez-ayhan -p 3000:3000 chez-ayhan
+            docker run -d --name chez-ayhan -p 3000:3000 \
+                --env-file /root/env/.env \
+                chez-ayhan
           EOF
 
       - name: Clean up
