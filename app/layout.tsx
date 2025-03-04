@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: meta.description,
     referrer: 'origin-when-cross-origin',
     keywords: ['Chez Maman', 'Cuisine', 'Maman'],
-    authors: [{ name: 'Chez Maman', url: 'https://chezmaman.fr/' }],
+    authors: [{ name: 'Chez Maman', url: 'https://chezmaman.be/' }],
     creator: 'Chez Maman',
     publisher: 'Chez Maman',
     robots: meta.robots,
