@@ -6,10 +6,13 @@ import { Label } from "@/components/ui/label"
 import * as RadioGroup from '@radix-ui/react-radio-group';
 import { useState, FormEvent } from 'react';
 import { toast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation";
 
 export function OrderSection() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     phone: '',
     quantity: 1,
     deliveryMode: 'delivery',
@@ -32,43 +35,71 @@ export function OrderSection() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/send-order-email', {
+      // 1. Créer la commande dans notre système de suivi
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ formData })
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Erreur lors de la création de la commande');
+      }
+
+      const orderData = await orderResponse.json();
+      
+      // 2. Envoyer l'email avec les détails de la commande
+      const emailResponse = await fetch('/api/send-order-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           to: 'ismajesuis@live.fr',
-          formData
+          formData: {
+            ...formData,
+            orderNumber: orderData.order_number // Inclure le numéro de commande dans l'email
+          }
         }),
       });
 
-      if (response.ok) {
+      if (emailResponse.ok) {
+        // Afficher une notification de succès
         toast({
-          title: "Commande envoyée",
-          description: "Nous avons bien reçu votre commande. Merci!",
+          title: "Commande enregistrée",
+          description: "Votre commande a été créée avec succès!",
         });
-        // Reset form
+        
+        // Réinitialiser le formulaire
         setFormData({
           name: '',
+          email: '',
           phone: '',
           quantity: 1,
           deliveryMode: 'delivery',
           address: '',
           notes: ''
         });
+        
+        // Rediriger vers la page de confirmation avec le numéro de commande
+        router.push(`/orders/${orderData.order_number}`);
       } else {
         toast({
-          title: "Erreur",
-          description: "Un problème est survenu lors de l'envoi de votre commande. Veuillez réessayer.",
+          title: "Attention",
+          description: "Votre commande a été créée mais nous n'avons pas pu envoyer l'email de confirmation.",
           variant: "destructive"
         });
+        
+        // Rediriger tout de même vers la page de confirmation
+        router.push(`/orders/${orderData.order_number}`);
       }
     } catch (error) {
-      console.error('Error sending order:', error);
+      console.error('Error processing order:', error);
       toast({
         title: "Erreur",
-        description: "Un problème est survenu lors de l'envoi de votre commande. Veuillez réessayer.",
+        description: "Un problème est survenu lors du traitement de votre commande. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {
@@ -94,6 +125,18 @@ export function OrderSection() {
                     placeholder="Votre nom" 
                     className="rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                     value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Votre email"
+                    className="rounded-lg border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                    value={formData.email}
                     onChange={handleInputChange}
                     required
                   />

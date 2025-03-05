@@ -6,7 +6,7 @@ export function Footer() {
       <div className="container px-4 mx-auto">
         <div className="max-w-3xl mx-auto text-center">
           <div className="mb-4">
-            <h3 className="text-xl font-bold text-orange-600">Chez Maman</h3>
+            <h3 className="text-xl font-bold text-orange-600">Chez Ayhan</h3>
             <p className="text-gray-600 mt-2">Lahmacun Fait Maison</p>
           </div>
           <div className="space-y-2 text-gray-600">
@@ -15,7 +15,7 @@ export function Footer() {
             <p>⏰ Les Mardi et Samedi : 9h00 - 18h00</p>
           </div>
           <div className="mt-8 text-sm text-gray-500">
-            © {new Date().getFullYear()} Chez Maman. Tous droits réservés.
+            © {new Date().getFullYear()} Site créé par <a href="https://www.linkedin.com/in/isay.prod/" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:text-orange-700">isay.prod</a>. Tous droits réservés.
           </div>
         </div>
       </div>
