@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ClipboardList, Calendar, TrendingUp, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/utils/supabase/client';
+import { OrderStatus } from '@/utils/orderStatus';
 
 const supabase = createClient();
 
@@ -42,13 +43,13 @@ export default function AdminDashboardPage() {
         const { count: pendingCount } = await supabase
           .from('orders')
           .select('*', { count: 'exact', head: true })
-          .in('status', ['en_attente_de_preparation', 'en_preparation']);
+          .in('status', [OrderStatus.PENDING, OrderStatus.PREPARING]);
         
         // Commandes en livraison
         const { count: deliveryCount } = await supabase
           .from('orders')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'en_livraison');
+          .eq('status', OrderStatus.DELIVERING);
         
         setStats({
           totalOrders: totalCount || 0,

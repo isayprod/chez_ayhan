@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import OrderStatusTracker, { OrderStatus } from '@/components/orders/OrderStatusTracker';
+import OrderStatusTracker, { OrderStatusType } from '@/components/orders/OrderStatusTracker';
 import OrderNotes from '@/components/orders/OrderNotes';
 import ShareQRCode from '@/components/orders/ShareQRCode';
 import { motion } from 'framer-motion';
 import { createClient } from '@/utils/supabase/client';
+import { OrderStatus } from '@/utils/orderStatus';
 
 interface OrderData {
   id: string;
   order_number: string;
-  status: OrderStatus;
+  status: OrderStatusType;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -39,15 +40,8 @@ export default function OrderDashboard({ params }: DashboardProps) {
   const { toast } = useToast();
 
   // Fonction pour obtenir le libellé d'un statut
-  const getStatusLabel = (status: OrderStatus) => {
-    const statusMap: Record<OrderStatus, string> = {
-      'en_attente_de_preparation': 'En attente de préparation',
-      'en_preparation': 'En préparation',
-      'prete_a_etre_recuperee': 'Prête à être récupérée',
-      'en_livraison': 'En livraison',
-      'livree': 'Livrée'
-    };
-    return statusMap[status] || status;
+  const getStatusLabel = (status: OrderStatusType) => {
+    return OrderStatus.getLabel(status);
   };
   
   useEffect(() => {
@@ -143,7 +137,7 @@ export default function OrderDashboard({ params }: DashboardProps) {
   }
   
   // Déterminer si les notes sont modifiables (pas en préparation)
-  const canEditNotes = order.status !== 'en_preparation';
+  const canEditNotes = order.status !== OrderStatus.PREPARING;
   
   // Vérifier si c'est une livraison ou un retrait sur place
   const isDelivery = order.customer_data?.deliveryMode === 'delivery';

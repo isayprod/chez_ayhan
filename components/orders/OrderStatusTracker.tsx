@@ -1,15 +1,16 @@
 import { CheckIcon, TruckIcon, PackageIcon, UtensilsIcon, ClockIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { OrderStatus } from "@/utils/orderStatus";
 
 /**
  * Types de statuts de commande possibles
  */
-export type OrderStatus = 
-  | 'en_attente_de_preparation'
-  | 'en_preparation'
-  | 'prete_a_etre_recuperee'
-  | 'en_livraison'
-  | 'livree';
+export type OrderStatusType = 
+  | typeof OrderStatus.PENDING
+  | typeof OrderStatus.PREPARING
+  | typeof OrderStatus.READY
+  | typeof OrderStatus.DELIVERING
+  | typeof OrderStatus.DELIVERED;
 
 /**
  * Configuration des étapes de statut avec leurs propriétés visuelles
@@ -18,14 +19,14 @@ const getStatusSteps = (isDelivery: boolean) => {
   // Étapes communes pour tous les modes
   const baseSteps = [
     { 
-      key: 'en_attente_de_preparation', 
-      label: 'En attente', 
+      key: OrderStatus.PENDING, 
+      label: OrderStatus.getShortLabel(OrderStatus.PENDING), 
       color: 'bg-yellow-500',
       icon: ClockIcon
     },
     { 
-      key: 'en_preparation', 
-      label: 'En préparation', 
+      key: OrderStatus.PREPARING, 
+      label: OrderStatus.getShortLabel(OrderStatus.PREPARING), 
       color: 'bg-orange-500',
       icon: UtensilsIcon
     },
@@ -36,24 +37,24 @@ const getStatusSteps = (isDelivery: boolean) => {
     return [
       ...baseSteps,
       { 
-        key: 'en_livraison', 
-        label: 'En livraison', 
+        key: OrderStatus.DELIVERING, 
+        label: OrderStatus.getShortLabel(OrderStatus.DELIVERING), 
         color: 'bg-blue-500',
         icon: TruckIcon
       },
       { 
-        key: 'livree', 
-        label: 'Livrée', 
+        key: OrderStatus.DELIVERED, 
+        label: OrderStatus.getShortLabel(OrderStatus.DELIVERED), 
         color: 'bg-gray-500',
         icon: PackageIcon
       }
     ];
-  }else {
+  } else {
     return [
       ...baseSteps,
       { 
-        key: 'prete_a_etre_recuperee', 
-        label: 'Prête', 
+        key: OrderStatus.READY, 
+        label: OrderStatus.getShortLabel(OrderStatus.READY), 
         color: 'bg-green-500',
         icon: CheckIcon
       }
@@ -62,7 +63,7 @@ const getStatusSteps = (isDelivery: boolean) => {
 };
 
 interface OrderStatusTrackerProps {
-  status: OrderStatus;
+  status: OrderStatusType;
   isDelivery?: boolean;
 }
 

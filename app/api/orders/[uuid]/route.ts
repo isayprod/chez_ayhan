@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { OrderStatus } from '@/utils/orderStatus';
 
 // Schéma de validation pour la mise à jour des notes
 const updateSchema = z.object({
@@ -100,7 +101,7 @@ export async function PATCH(
     }
 
     // Empêcher la modification si la commande est en préparation
-    if (orderData?.status === 'en_preparation') {
+    if (orderData?.status === OrderStatus.PREPARING) {
       return NextResponse.json(
         { error: 'Impossible de modifier les notes pendant la préparation' },
         { status: 403 }

@@ -21,7 +21,7 @@ jobs:
       # Build the Docker image
       - name: Build Docker image
         run: |
-          docker build -t nextjs-app:develop .
+          docker build -t chez-ayhan:develop .
 
       # Success message (runs only if build succeeds)
       - name: Build successful

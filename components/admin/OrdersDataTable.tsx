@@ -22,10 +22,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/use-toast';
-import { RefreshCw, Search, ExternalLink } from 'lucide-react';
+import { RefreshCw, Search, ExternalLink, MapPin, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { createClient } from '@/utils/supabase/client';
+import { OrderStatus } from '@/utils/orderStatus';
+import { ModeStatus } from '@/utils/modeStatus';
 
 // Types
 interface Order {
@@ -45,13 +47,39 @@ interface Order {
   } | null;
 }
 
-// Statuts et leurs couleurs
+// Utilisation de la classe OrderStatus pour les configurations de statut
 const statusConfig = {
-  'en_attente_de_preparation': { label: 'En attente', color: 'bg-yellow-100 text-yellow-800' },
-  'en_preparation': { label: 'En préparation', color: 'bg-orange-100 text-orange-800' },
-  'prete_a_etre_recuperee': { label: 'Prête', color: 'bg-green-100 text-green-800' },
-  'en_livraison': { label: 'En livraison', color: 'bg-blue-100 text-blue-800' },
-  'livree': { label: 'Livrée', color: 'bg-gray-100 text-gray-800' }
+  [OrderStatus.PENDING]: { 
+    label: OrderStatus.getShortLabel(OrderStatus.PENDING), 
+    color: OrderStatus.getColor(OrderStatus.PENDING) 
+  },
+  [OrderStatus.PREPARING]: { 
+    label: OrderStatus.getShortLabel(OrderStatus.PREPARING), 
+    color: OrderStatus.getColor(OrderStatus.PREPARING)
+  },
+  [OrderStatus.READY]: { 
+    label: OrderStatus.getShortLabel(OrderStatus.READY), 
+    color: OrderStatus.getColor(OrderStatus.READY)
+  },
+  [OrderStatus.DELIVERING]: { 
+    label: OrderStatus.getShortLabel(OrderStatus.DELIVERING), 
+    color: OrderStatus.getColor(OrderStatus.DELIVERING)
+  },
+  [OrderStatus.DELIVERED]: { 
+    label: OrderStatus.getShortLabel(OrderStatus.DELIVERED), 
+    color: OrderStatus.getColor(OrderStatus.DELIVERED)
+  }
+};
+
+const modeConfig = {
+  [ModeStatus.DELIVERY]: {
+    label: ModeStatus.getShortLabel(ModeStatus.DELIVERY),
+    color: ModeStatus.getColor(ModeStatus.DELIVERY)
+  },
+  [ModeStatus.PICKUP]: {
+    label: ModeStatus.getShortLabel(ModeStatus.PICKUP),
+    color: ModeStatus.getColor(ModeStatus.PICKUP)
+  }
 };
 
 export default function OrdersDataTable() {
@@ -59,6 +87,7 @@ export default function OrdersDataTable() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [modeFilter, setModeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   const supabase = createClient();
@@ -75,7 +104,7 @@ export default function OrdersDataTable() {
       if (error) throw error;
       
       setOrders(data || []);
-      applyFilters(data || [], statusFilter, searchQuery);
+      applyFilters(data || [], statusFilter, modeFilter, searchQuery);
     } catch (error) {
       console.error('Erreur lors du chargement des commandes:', error);
       toast({
@@ -103,7 +132,7 @@ export default function OrdersDataTable() {
         order.id === orderId ? { ...order, status: newStatus } : order
       );
       setOrders(updatedOrders);
-      applyFilters(updatedOrders, statusFilter, searchQuery);
+      applyFilters(updatedOrders, statusFilter, modeFilter, searchQuery);
       
       toast({
         title: 'Statut mis à jour',
@@ -121,12 +150,17 @@ export default function OrdersDataTable() {
   };
 
   // Filtrer les commandes
-  const applyFilters = (ordersList: Order[], status: string, query: string) => {
+  const applyFilters = (ordersList: Order[], status: string, mode: string, query: string) => {
     let filtered = [...ordersList];
     
     // Filtre par statut
     if (status !== 'all') {
       filtered = filtered.filter(order => order.status === status);
+    }
+
+    // Filtre par mode
+    if (mode !== 'all') {
+      filtered = filtered.filter(order => order.customer_data?.deliveryMode === mode);
     }
     
     // Filtre par recherche (numéro de commande, nom, email)
@@ -171,8 +205,8 @@ export default function OrdersDataTable() {
 
   // Effet pour appliquer les filtres
   useEffect(() => {
-    applyFilters(orders, statusFilter, searchQuery);
-  }, [statusFilter, searchQuery]);
+    applyFilters(orders, statusFilter, modeFilter, searchQuery);
+  }, [statusFilter, modeFilter, searchQuery]);
 
   // Formater la date
   const formatDate = (dateString: string) => {
@@ -183,37 +217,6 @@ export default function OrdersDataTable() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  // Déterminer le prochain statut
-  const getNextStatus = (currentStatus: string) => {
-    const statusFlow = [
-      'en_attente_de_preparation',
-      'en_preparation',
-      'prete_a_etre_recuperee',
-      'en_livraison',
-      'livree'
-    ];
-    
-    const currentIndex = statusFlow.indexOf(currentStatus);
-    
-    // Si le statut actuel est le dernier ou n'est pas trouvé, retourner le même statut
-    if (currentIndex === -1 || currentIndex === statusFlow.length - 1) {
-      return currentStatus;
-    }
-    
-    // Sinon, retourner le statut suivant
-    return statusFlow[currentIndex + 1];
-  };
-  
-  // Vérifier si le statut suivant est pertinent (pour la livraison)
-  const isNextStatusRelevant = (order: Order, nextStatus: string) => {
-    // Si le mode n'est pas livraison et que le statut suivant est lié à la livraison
-    if (order.customer_data?.deliveryMode !== 'delivery' && 
-        (nextStatus === 'en_livraison' || nextStatus === 'livree')) {
-      return false;
-    }
-    return true;
   };
 
   return (
@@ -237,12 +240,29 @@ export default function OrdersDataTable() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+
+            <Select
+              value={modeFilter}
+              onValueChange={(value) => setModeFilter(value)}
+            >
+              <SelectTrigger className="w-[180px] focus:ring-0 focus:ring-offset-0">
+                <SelectValue placeholder="Tous les modes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les modes</SelectItem>
+                {Object.entries(modeConfig).map(([value, { label }]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
             <Select
               value={statusFilter}
               onValueChange={(value) => setStatusFilter(value)}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] focus:ring-1 focus:ring-offset-1">
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
@@ -302,9 +322,8 @@ export default function OrdersDataTable() {
               ) : (
                 filteredOrders.map((order) => {
                   const statusInfo = statusConfig[order.status as keyof typeof statusConfig];
-                  const nextStatus = getNextStatus(order.status);
-                  const canProgress = order.status !== 'livree' && 
-                                      isNextStatusRelevant(order, nextStatus);
+                  const nextStatus = OrderStatus.getNextStatus(order.status);
+                  const canProgress = order.status != 'delivered' && OrderStatus.isRelevantStatus(nextStatus, order.customer_data?.deliveryMode === 'delivery');
                   
                   return (
                     <motion.tr 
@@ -314,15 +333,45 @@ export default function OrdersDataTable() {
                       exit={{ opacity: 0 }}
                       className="border-b"
                     >
-                      <TableCell className="font-medium">
-                        {order.order_number}
+                      <TableCell className="font-semibold">
+                        {(() => {
+                          // Get the numeric part of the order number
+                          const currentNum = parseInt(order.order_number.split('-')[1]);
+                          const maxNum = Math.max(...filteredOrders.map(o => parseInt(o.order_number.split('-')[1])));
+                          
+                          // Calculate opacity based on position from latest order
+                          const diff = maxNum - currentNum;
+                          if (diff >= 5) {
+                            return <span className="opacity-100">{order.order_number}</span>;
+                          }
+                          
+                          // Create gradient for 5 most recent orders (20% steps)
+                          const opacity = 0.2 + ((4 - diff) * 0.3);
+                          return <span style={{ opacity }}>{order.order_number}</span>;
+                        })()}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
                           <span>{order.customer_data?.name || 'Non disponible'}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {order.customer_data?.phone || 'Pas de téléphone'}
-                          </span>
+                          {order.customer_data?.deliveryMode === 'delivery' ? (
+                            <a 
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.customer_data?.address || '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-muted-foreground hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              {order.customer_data?.address || 'Pas d\'adresse'}
+                            </a>
+                          ) : (
+                            <a
+                              href={`tel:${order.customer_data?.phone}`}
+                              className="text-xs text-muted-foreground hover:underline cursor-pointer flex items-center gap-1"
+                            >
+                              <Phone className="h-3 w-3" />
+                              {order.customer_data?.phone || 'Pas de téléphone'}
+                            </a>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -332,7 +381,7 @@ export default function OrdersDataTable() {
                       </TableCell>
                       <TableCell>{formatDate(order.created_at)}</TableCell>
                       <TableCell>
-                        <Badge className={statusInfo?.color}>
+                        <Badge className={`${statusInfo?.color} pointer-events-none`}>
                           {statusInfo?.label}
                         </Badge>
                       </TableCell>

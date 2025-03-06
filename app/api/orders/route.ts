@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { generateOrderNumber } from '@/utils/order';
+import { OrderStatus } from '@/utils/orderStatus';
 
 export async function POST(request: Request) {
   try {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
       .from('orders')
       .insert({
         order_number: orderNumber,
-        status: 'en_attente_de_preparation',
+        status: OrderStatus.PENDING,
         customer_data: formData
           ? {
               name: formData.name,
