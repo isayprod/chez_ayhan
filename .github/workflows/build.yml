@@ -3,51 +3,39 @@ name: Build Docker Image
 on:
   push:
     branches:
-      - develop # Trigger on push to develop
+      - develop
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8 # Latest stable as of now
+          version: 8
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 23
 
-      # Set up Docker Buildx (for faster builds and multi-platform support)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Debug Environment
+      - name: Create .env file
         run: |
-          echo "Build argument values check (masked for security):"
-          echo "NEXT_PUBLIC_SUPABASE_URL exists: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}"
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY exists: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' }}"
+          cat > .env << EOL
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          EOL
 
-      # Build the Docker image
       - name: Build Docker image
         run: |
           docker build -t chez-ayhan:develop \
             --build-arg NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
             --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
             .
-
-      # Success message (runs only if build succeeds)
-      - name: Build successful
-        if: success()
-        run: echo "✅ Docker image for Next.js built successfully!"
-
-      # Failure message (runs only if build fails)
-      - name: Build failed
-        if: failure()
-        run: echo "❌ Docker image build failed. Check the logs above for details."
