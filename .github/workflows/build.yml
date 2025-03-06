@@ -28,6 +28,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      - name: Debug Environment
+        run: |
+          echo "Build argument values check (masked for security):"
+          echo "NEXT_PUBLIC_SUPABASE_URL exists: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}"
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY exists: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' }}"
+
       # Build the Docker image
       - name: Build Docker image
         run: |
