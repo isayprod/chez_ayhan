@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { useToast } from '@/components/ui/use-toast';
 import OrderStatusTracker, { OrderStatus } from '@/components/orders/OrderStatusTracker';
 import OrderNotes from '@/components/orders/OrderNotes';
 import ShareQRCode from '@/components/orders/ShareQRCode';
 import { motion } from 'framer-motion';
+import { createClient } from '@/utils/supabase/client';
 
 interface OrderData {
   id: string;
@@ -35,10 +35,7 @@ export default function OrderDashboard({ params }: DashboardProps) {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient();
   const { toast } = useToast();
 
   // Fonction pour obtenir le libellé d'un statut

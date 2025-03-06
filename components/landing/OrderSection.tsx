@@ -7,6 +7,7 @@ import * as RadioGroup from '@radix-ui/react-radio-group';
 import { useState, FormEvent } from 'react';
 import { toast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation";
+import axios from 'axios';
 
 export function OrderSection() {
   const router = useRouter();
@@ -36,70 +37,53 @@ export function OrderSection() {
 
     try {
       // 1. Créer la commande dans notre système de suivi
-      const orderResponse = await fetch('/api/orders', {
-        method: 'POST',
+      const orderResponse = await axios.post('/api/orders', { formData }, {
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ formData })
+        }
       });
 
-      if (!orderResponse.ok) {
-        throw new Error('Erreur lors de la création de la commande');
-      }
-
-      const orderData = await orderResponse.json();
+      const orderData = orderResponse.data;
       
       // 2. Envoyer l'email avec les détails de la commande
-      const emailResponse = await fetch('/api/send-order-email', {
-        method: 'POST',
+      const emailResponse = await axios.post('/api/send-order-email', {
+        to: 'ismajesuis@live.fr',
+        formData: {
+          ...formData,
+          orderNumber: orderData.order_number // Inclure le numéro de commande dans l'email
+        }
+      }, {
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: 'ismajesuis@live.fr',
-          formData: {
-            ...formData,
-            orderNumber: orderData.order_number // Inclure le numéro de commande dans l'email
-          }
-        }),
+        }
       });
 
-      if (emailResponse.ok) {
-        // Afficher une notification de succès
-        toast({
-          title: "Commande enregistrée",
-          description: "Votre commande a été créée avec succès!",
-        });
-        
-        // Réinitialiser le formulaire
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          quantity: 1,
-          deliveryMode: 'delivery',
-          address: '',
-          notes: ''
-        });
-        
-        // Rediriger vers la page de confirmation avec le numéro de commande
-        router.push(`/orders/${orderData.order_number}`);
-      } else {
-        toast({
-          title: "Attention",
-          description: "Votre commande a été créée mais nous n'avons pas pu envoyer l'email de confirmation.",
-          variant: "destructive"
-        });
-        
-        // Rediriger tout de même vers la page de confirmation
-        router.push(`/orders/${orderData.order_number}`);
-      }
+      // Afficher une notification de succès
+      toast({
+        title: "Commande enregistrée",
+        description: "Votre commande a été créée avec succès!",
+      });
+      
+      // Réinitialiser le formulaire
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        quantity: 1,
+        deliveryMode: 'delivery',
+        address: '',
+        notes: ''
+      });
+      
+      // Rediriger vers la page de confirmation avec le numéro de commande
+      router.push(`/orders/${orderData.order_number}`);
     } catch (error) {
       console.error('Error processing order:', error);
       toast({
         title: "Erreur",
-        description: "Un problème est survenu lors du traitement de votre commande. Veuillez réessayer.",
+        description: axios.isAxiosError(error)
+          ? error.response?.data?.error || "Un problème est survenu lors du traitement de votre commande. Veuillez réessayer."
+          : "Un problème est survenu lors du traitement de votre commande. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {

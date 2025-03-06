@@ -1,10 +1,10 @@
 'use client';
 
-import { createBrowserClient } from '@supabase/ssr';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, Loader2 } from 'lucide-react';
+import { createClient } from '@/utils/supabase/client';
 
 // Fonction vide qui sera remplacée par la vraie fonction confetti côté client
 const noopConfetti = () => null;
@@ -33,10 +33,7 @@ export default function OrderConfirmation({ params }: OrderConfirmationProps) {
     
     async function loadOrder() {
       try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        );
+        const supabase = createClient();
         
         // Rechercher la commande dans la base de données
         const { data, error: supabaseError } = await supabase

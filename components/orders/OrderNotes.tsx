@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import axios from 'axios';
 
 interface OrderNotesProps {
   initialNotes: string;
@@ -33,16 +34,9 @@ export default function OrderNotes({
     setIsLoading(true);
     
     try {
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes })
+      const response = await axios.patch(`/api/orders/${orderId}`, { notes }, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erreur lors de la mise à jour des notes');
-      }
       
       toast({
         title: 'Notes sauvegardées',
@@ -53,7 +47,9 @@ export default function OrderNotes({
       console.error('Erreur:', error);
       toast({
         title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Erreur lors de la mise à jour',
+        description: axios.isAxiosError(error) 
+          ? error.response?.data?.message || 'Erreur lors de la mise à jour'
+          : error instanceof Error ? error.message : 'Erreur lors de la mise à jour',
         variant: 'destructive',
       });
     } finally {

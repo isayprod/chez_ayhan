@@ -1,18 +1,24 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { Database } from '@/types_db';
+import { createClient as createCustomClient } from './client';
 
 // Define a function to create a Supabase client for server-side operations
 // The function takes a cookie store created with next/headers cookies as an argument
 export const createClient = () => {
   const cookieStore = cookies();
 
-  return createServerClient<Database>(
-    // Pass Supabase URL and anonymous key from the environment to the client
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  // Pour les API routes et serveur uniquement
+  if (!process.env.SUPABASE_SERVICE_KEY) {
+    // Fallback à la clé anonyme si la clé de service n'est pas disponible
+    console.warn(
+      'SUPABASE_SERVICE_KEY non définie, utilisation de la clé anonyme'
+    );
+    return createCustomClient();
+  }
 
-    // Define a cookies object with methods for interacting with the cookie store and pass it to the client
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!,
     {
       cookies: {
         // The get method is used to retrieve a cookie by its name

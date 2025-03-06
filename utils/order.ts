@@ -1,11 +1,11 @@
-import { createSupabaseAdmin } from './supabase';
+import { createClient } from './supabase/server';
 
 /**
  * Génère un numéro de commande au format ORDER-XXX
  * en fonction du nombre de commandes existantes
  */
 export async function generateOrderNumber() {
-  const supabase = createSupabaseAdmin();
+  const supabase = createClient();
 
   // Obtenir le nombre total de commandes
   const { count } = await supabase
