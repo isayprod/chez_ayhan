@@ -25,7 +25,7 @@ export function Navbar() {
   return (
     <nav className={`fixed w-full bg-white/80 backdrop-blur-sm z-50 ${scrolled ? 'shadow-sm' : 'border-b'}`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <a href='#main' className="text-2xl font-bold text-orange-600">Chez Maman</a>
+        <a href='#main' className="text-2xl font-bold text-orange-600">Chez Ayhan</a>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex space-x-6">

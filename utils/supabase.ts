@@ -1,20 +1,23 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { CookieOptions, createServerClient } from '@supabase/ssr';
+import { createClient } from './supabase/client';
 import { cookies } from 'next/headers';
-import { createClient as createCustomClient } from './client';
 
-// Define a function to create a Supabase client for server-side operations
-// The function takes a cookie store created with next/headers cookies as an argument
-export const createClient = () => {
-  const cookieStore = cookies();
+// Vérifier les variables d'environnement requises
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
+}
 
+// Client Supabase côté serveur (permissions étendues)
+export function createSupabaseServer() {
   // Pour les API routes et serveur uniquement
   if (!process.env.SUPABASE_SERVICE_KEY) {
     // Fallback à la clé anonyme si la clé de service n'est pas disponible
     console.warn(
       'SUPABASE_SERVICE_KEY non définie, utilisation de la clé anonyme'
     );
-    return createCustomClient();
+    return createClient();
   }
+  const cookieStore = cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,4 +49,4 @@ export const createClient = () => {
       }
     }
   );
-};
+}
