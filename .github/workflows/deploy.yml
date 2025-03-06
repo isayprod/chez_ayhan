@@ -22,6 +22,13 @@ jobs:
         with:
           node-version: 23
 
+      - name: Create .env file
+        run: |
+          cat > .env << EOL
+          NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          EOL
+
       - name: Build and push Docker image
         run: |
           mkdir -p ~/.ssh
