@@ -26,6 +26,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      # admin page create a client secret. need an temp env file to build the image
       - name: Create .env file
         run: |
           cat > .env << EOL
