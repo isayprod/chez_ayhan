@@ -26,9 +26,7 @@ export async function POST(request: NextRequest) {
       expires: Date.now() + expiresIn * 1000,
       path: '/',
       httpOnly: true,
-      secure: process.env.NODE_ENV
-        ? process.env.NODE_ENV === 'production'
-        : true,
+      secure: false, // TODO: change to true in production
       sameSite: 'lax'
     });
 
