@@ -49,11 +49,6 @@ export async function POST(req: Request) {
       }
     `;
 
-    console.log(process.env.EMAIL_SERVER_HOST);
-    console.log(process.env.EMAIL_SERVER_PORT);
-    console.log(process.env.EMAIL_SERVER_SECURE);
-    console.log(process.env.EMAIL_SERVER_USER);
-
     // Create a transporter
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
